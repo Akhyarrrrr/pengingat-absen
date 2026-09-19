@@ -1,5 +1,6 @@
 .private/
-runtime/
+runtime/*
+!runtime/ocr-model.json
 docs/
 node_modules/
 PERTEMUAN-UJI.json
