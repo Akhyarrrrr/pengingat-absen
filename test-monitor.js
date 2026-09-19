@@ -52,6 +52,27 @@ assert.equal(openClass.length, 1);
 assert.equal(openClass[0].code, 'MKU101');
 assert.equal(openClass[0].attendance, 'open');
 
+// Regresi live 2026-09-19: layout terbuka memuat kalimat disclaimer "dosen ... presensi",
+// "Anda belum absen", "Batas Absen" DAN tombol "Konfirmasi Kehadiran" — harus dibaca 'open',
+// bukan terjebak aturan waiting (DOSEN.{0,80}BELUM.{0,80}ABSEN).
+const liveOpen = [
+  'Absensi Kelas A | MMAI1001 - KECERDASAN ARTIFICIAL | Pertemuan ke-5 | SKS Mengajar : 3',
+  'Info Absensi Mahasiswa hanya dapat melakukan presensi dalam rentang waktu 15 menit setelah dosen melakukan presensi.',
+  'Anda belum absen',
+  'Kelas Gedung Ruang Jam Batas Absen A Gedung MIPA B.01.01 14.00 - 16.30 14:18',
+  'LINK DARING Belum diinput oleh dosen',
+  'Konfirmasi Kehadiran'
+].join(' ');
+const liveClasses = classifyClasses(liveOpen);
+assert.equal(liveClasses.length, 1);
+assert.equal(liveClasses[0].code, 'MMAI1001');
+assert.equal(liveClasses[0].attendance, 'open');
+assert.equal(liveClasses[0].window, '14.00-16.30');
+assert.equal(classifyDocument({ url: 'https://kampus.example/index.php/absensi', text: liveOpen, controls: [{ text: 'Konfirmasi Kehadiran', disabled: false }] }).attendance, 'open');
+// Layout menunggu (tombol belum muncul) tetap 'waiting_lecturer' walau memuat disclaimer.
+const liveWaiting = liveOpen.replace('Konfirmasi Kehadiran', 'Dosen belum melakukan absensi');
+assert.equal(classifyClasses(liveWaiting)[0].attendance, 'waiting_lecturer');
+
 assert.equal(envCredential({}), null);
 assert.equal(envCredential({ SIMKULIAH_ACCOUNT: 'x' }), null);
 assert.deepStrictEqual(envCredential({ SIMKULIAH_ACCOUNT: ' 26082 ', SIMKULIAH_PASSWORD: 'rahasia' }), { account: '26082', password: 'rahasia' });

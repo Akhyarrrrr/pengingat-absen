@@ -248,10 +248,10 @@ function classifyClassBlock(block) {
   const times = block.match(/(\d{1,2}[.:]\d{2})\s*-\s*(\d{1,2}[.:]\d{2})/);
   const upper = block.toUpperCase();
   let attendance = 'unknown';
-  if (/DOSEN.{0,80}BELUM.{0,80}ABSEN|DOSEN BELUM MELAKUKAN ABSENSI/.test(upper)) attendance = 'waiting_lecturer';
+  if (/KONFIRMASI KEHADIRAN|ABSEN SEKARANG|ISI ABSENSI|\bHADIR\b/.test(upper)) attendance = 'open';
+  else if (/DOSEN.{0,80}BELUM.{0,80}ABSEN|DOSEN BELUM MELAKUKAN ABSENSI/.test(upper)) attendance = 'waiting_lecturer';
   else if (/BELUM MASUK WAKTU ABSEN/.test(upper)) attendance = 'outside_window';
   else if (/ABSENSI.{0,40}(DITUTUP|BERAKHIR)|WAKTU ABSEN.{0,40}(HABIS|BERAKHIR)/.test(upper)) attendance = 'closed';
-  else if (/ABSEN SEKARANG|ISI ABSENSI|HADIR/.test(upper)) attendance = 'open';
   return {
     code: code || null,
     classCode: header ? header[1] : null,
@@ -276,14 +276,15 @@ function classifyDocument({ url = '', text = '', hasPassword = false, controls =
   const onAttendance = /\/INDEX\.PHP\/ABSENSI/i.test(url);
   if (!onAttendance) return { session: 'unknown', attendance: 'unknown' };
   const scope = courseScope(normalized, courseCode);
-  if (/DOSEN.{0,80}BELUM.{0,80}ABSEN|DOSEN BELUM MELAKUKAN ABSENSI/.test(scope)) return { session: 'authenticated', attendance: 'waiting_lecturer' };
-  if (/BELUM MASUK WAKTU ABSEN/.test(scope)) return { session: 'authenticated', attendance: 'outside_window' };
-  if (/ABSENSI.{0,40}(DITUTUP|BERAKHIR)|WAKTU ABSEN.{0,40}(HABIS|BERAKHIR)/.test(scope)) return { session: 'authenticated', attendance: 'closed' };
   const courseVisible = courseCode
     ? scope.includes(courseCode.toUpperCase())
     : /MMAI\d{4}/.test(scope);
-  const openControl = controls.some(control => !control.disabled && /^(ABSEN|ABSEN SEKARANG|ISI ABSENSI|HADIR)$/.test(String(control.text).trim().toUpperCase()));
-  return { session: 'authenticated', attendance: courseVisible && openControl ? 'open' : 'unknown' };
+  const openControl = controls.some(control => !control.disabled && /^(ABSEN|ABSEN SEKARANG|ISI ABSENSI|HADIR|KONFIRMASI KEHADIRAN)$/.test(String(control.text).trim().toUpperCase()));
+  if (courseVisible && openControl) return { session: 'authenticated', attendance: 'open' };
+  if (/DOSEN.{0,80}BELUM.{0,80}ABSEN|DOSEN BELUM MELAKUKAN ABSENSI/.test(scope)) return { session: 'authenticated', attendance: 'waiting_lecturer' };
+  if (/BELUM MASUK WAKTU ABSEN/.test(scope)) return { session: 'authenticated', attendance: 'outside_window' };
+  if (/ABSENSI.{0,40}(DITUTUP|BERAKHIR)|WAKTU ABSEN.{0,40}(HABIS|BERAKHIR)/.test(scope)) return { session: 'authenticated', attendance: 'closed' };
+  return { session: 'authenticated', attendance: 'unknown' };
 }
 
 async function classifyPage(page, courseCode = null) {
