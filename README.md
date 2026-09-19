@@ -166,26 +166,23 @@ Pilihan mode:
 
 ---
 
-## Menjalankan otomatis di GitHub Actions
+## Menjalankan otomatis di VPS (Coolify)
 
-Repo ini bisa memantau sendiri pada jam kuliah tanpa PC menyala. Isi dulu
-empat secret di **Settings → Secrets and variables → Actions**:
+Alat ini bisa memantau sendiri pada jam kuliah tanpa PC menyala. Ia dijalankan
+sebagai satu aplikasi Docker di Coolify yang selalu hidup (`sleep infinity`),
+lalu pemantauan dinyalakan lewat scheduled task hanya pada jam kuliah.
 
-| Secret | Isi |
+Kredensial diisi lewat environment variable aplikasi (bukan di repo):
+
+| Variabel | Isi |
 | --- | --- |
 | `SIMKULIAH_ACCOUNT` | NPM/akun layanan absensi |
 | `SIMKULIAH_PASSWORD` | Password akun |
 | `TELEGRAM_BOT_TOKEN` | Token bot Telegram |
 | `TELEGRAM_CHAT_ID` | ID chat tujuan |
 
-Alur `.github/workflows/monitor.yml` berjalan tiap sesi kuliah (Kamis, Jumat,
-dan Sabtu) memakai Chromium headless, lalu berhenti sendiri di akhir sesi.
-Tombol **Run workflow** bisa dipakai untuk uji coba kapan saja.
-
-Catatan: jadwal workflow bersifat publik (jam kuliahmu bisa terlihat), cron
-GitHub bisa telat beberapa menit, dan penjadwalan dinonaktifkan otomatis
-setelah 60 hari tanpa aktivitas repo. Kredensial tidak pernah masuk ke repo —
-hanya lewat Secrets.
+Langkah pemasangan lengkap (aplikasi, storage, scheduled task) terdokumentasi
+di dokumen perencanaan lokal; tidak ikut masuk ke repo.
 
 ---
 
@@ -278,8 +275,8 @@ Melatih ulang model pembaca CAPTCHA:
   servernya sendiri. Alat ini menganggapnya sebagai status, bukan bug alat.
 - Kata sandi dienkripsi khusus akun Windows. Jangan salin folder `.private`
   ke komputer atau cloud lain; di sana isinya tidak bisa dibuka.
-- **Hosting:** selain Windows, alat ini bisa berjalan otomatis di GitHub
-  Actions (Chromium headless, kredensial di Secrets). Lihat bagian
-  "Menjalankan otomatis di GitHub Actions".
+- **Hosting:** selain Windows lokal, alat ini berjalan otomatis di VPS memakai
+  Coolify (Docker, Chromium headless). Kredensial hanya lewat environment
+  variable, tidak pernah masuk repo.
 
 Catatan teknis untuk pengembang ada di `AGENTS.md` (berkas ini tidak ikut git).
