@@ -1,0 +1,7 @@
+.private/
+runtime/
+docs/
+node_modules/
+PERTEMUAN-UJI.json
+AGENTS.md
+*.log
