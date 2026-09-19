@@ -180,6 +180,22 @@ Kredensial diisi lewat environment variable aplikasi (bukan di repo):
 | `SIMKULIAH_PASSWORD` | Password akun |
 | `TELEGRAM_BOT_TOKEN` | Token bot Telegram |
 | `TELEGRAM_CHAT_ID` | ID chat tujuan |
+| `TZ` | `Asia/Jakarta` (zona penjadwalan dan `date` di dalam kontainer) |
+| `HEADLESS` | `1` (wajib di VPS; menolak fallback CAPTCHA manual) |
+
+Scheduled task menjalankan `node monitor.js monitor-all` dengan `MONITOR_END`
+diisi `$(date +%FT<jam>:00+07:00)` sesuai akhir jam kuliah. Login CAPTCHA
+terbukti sering gagal pada percobaan pertama (model OCR akurat ~2/3 untuk
+CAPTCHA baru), jadi perintah task dibungkus ulang:
+
+```sh
+for i in 1 2 3 4 5; do MONITOR_END=$(date +%FT18:30:00+07:00) node monitor.js monitor-all && exit 0; sleep 20; done; exit 1
+```
+
+Setiap iterasi adalah proses monitor baru dengan CAPTCHA baru; bila login tidak
+membuahkan hasil, iterasi berikutnya mencoba lagi. `timeout` task di Coolify
+perlu lebih besar dari durasi `monitor-all` (contoh: 26000 detik). Dedup pesan
+memakai receipt di `runtime/`, jadi pengulangan tidak mengirim notifikasi ganda.
 
 Langkah pemasangan lengkap (aplikasi, storage, scheduled task) terdokumentasi
 di dokumen perencanaan lokal; tidak ikut masuk ke repo.
