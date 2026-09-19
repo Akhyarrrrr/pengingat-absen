@@ -1,0 +1,53 @@
+name: Pantau Absensi
+
+on:
+  schedule:
+    - cron: '20 2 * * 4'
+    - cron: '10 3 * * 5'
+    - cron: '0 9 * * 5'
+    - cron: '20 0 * * 6'
+    - cron: '20 6 * * 6'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: monitor-absensi
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      TZ: Asia/Jakarta
+      CI: '1'
+      HEADLESS: '1'
+      SIMKULIAH_ACCOUNT: ${{ secrets.SIMKULIAH_ACCOUNT }}
+      SIMKULIAH_PASSWORD: ${{ secrets.SIMKULIAH_PASSWORD }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Tentukan akhir sesi
+        run: |
+          end_time=$(case "${{ github.event.schedule }}" in
+            "20 2 * * 4") echo 12:45;;
+            "10 3 * * 5") echo 12:40;;
+            "0 9 * * 5") echo 18:30;;
+            "20 0 * * 6") echo 11:45;;
+            "20 6 * * 6") echo 18:30;;
+          esac)
+          if [ -z "$end_time" ]; then
+            end_time=$(TZ=Asia/Jakarta date -d '+20 minutes' +%H:%M)
+          fi
+          echo "MONITOR_END=$(TZ=Asia/Jakarta date +%F)T${end_time}:00+07:00" >> "$GITHUB_ENV"
+      - name: Jalankan monitor
+        run: node monitor.js monitor-all

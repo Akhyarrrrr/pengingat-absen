@@ -1,0 +1,14 @@
+.private/
+runtime/*
+!runtime/ocr-model.json
+node_modules/
+*.log
+Thumbs.db
+.DS_Store
+
+# Pengaturan & catatan lokal (jangan di-commit)
+PERTEMUAN-UJI.json
+AGENTS.md
+
+# Dokumen perencanaan (privat)
+docs/

@@ -1,0 +1,9 @@
+{
+  "course_code": "MKU101",
+  "course_name": "Contoh Mata Kuliah",
+  "class": "A",
+  "room": "Ruang 101",
+  "start": "2027-01-01T08:00:00+07:00",
+  "end": "2027-01-01T10:30:00+07:00",
+  "attendance_url": "https://contoh-kampus.ac.id/absensi"
+}

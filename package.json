@@ -1,0 +1,20 @@
+{
+  "name": "absen",
+  "version": "1.0.0",
+  "description": "Pengingat absen: mengawasi halaman absensi kampus dan mengirim notifikasi Telegram",
+  "main": "monitor.js",
+  "scripts": {
+    "test": "node test-monitor.js",
+    "measure:idle": "node monitor.js measure-idle",
+    "measure:active": "node monitor.js measure-active",
+    "monitor:class": "node monitor.js monitor-class",
+    "monitor:all": "node monitor.js monitor-all"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "playwright": "1.61.0"
+  }
+}
