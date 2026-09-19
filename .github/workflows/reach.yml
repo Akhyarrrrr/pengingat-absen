@@ -1,0 +1,12 @@
+name: Reach Test
+on: workflow_dispatch
+jobs:
+  reach:
+    runs-on: ubuntu-latest
+    steps:
+      - name: DNS
+        run: getent hosts simkuliah.usk.ac.id || echo "DNS gagal"
+      - name: HTTPS
+        run: curl -sS -o /dev/null -w 'HTTPS %{http_code} connect %{time_connect} total %{time_total}\n' --max-time 20 https://simkuliah.usk.ac.id/index.php/absensi || echo "https gagal exit=$?"
+      - name: HTTP
+        run: curl -sS -o /dev/null -w 'HTTP %{http_code} connect %{time_connect} total %{time_total}\n' --max-time 20 http://simkuliah.usk.ac.id/ || echo "http gagal exit=$?"
