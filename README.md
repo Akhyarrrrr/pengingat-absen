@@ -189,13 +189,15 @@ terbukti sering gagal pada percobaan pertama (model OCR akurat ~2/3 untuk
 CAPTCHA baru), jadi perintah task dibungkus ulang:
 
 ```sh
-for i in 1 2 3 4 5; do MONITOR_END=$(date +%FT18:30:00+07:00) node monitor.js monitor-all && exit 0; sleep 20; done; exit 1
+for i in 1 2 3 4 5; do MONITOR_SUPPRESS_FATAL=$([ "$i" -lt 5 ] && echo 1 || echo 0) MONITOR_END=$(date +%FT18:30:00+07:00) node monitor.js monitor-all && exit 0; sleep 20; done; exit 1
 ```
 
 Setiap iterasi adalah proses monitor baru dengan CAPTCHA baru; bila login tidak
-membuahkan hasil, iterasi berikutnya mencoba lagi. `timeout` task di Coolify
-perlu lebih besar dari durasi `monitor-all` (contoh: 26000 detik). Dedup pesan
-memakai receipt di `runtime/`, jadi pengulangan tidak mengirim notifikasi ganda.
+membuahkan hasil, iterasi berikutnya mencoba lagi. Setiap proses mencoba hingga
+enam CAPTCHA. Notifikasi fatal dibisukan pada empat proses pertama dan hanya
+dikirim jika proses terakhir juga gagal. `timeout` task di Coolify perlu lebih
+besar dari durasi `monitor-all` (contoh: 26000 detik). Dedup pesan memakai
+receipt di `runtime/`, jadi pengulangan tidak mengirim notifikasi ganda.
 
 Langkah pemasangan lengkap (aplikasi, storage, scheduled task) terdokumentasi
 di dokumen perencanaan lokal; tidak ikut masuk ke repo.
