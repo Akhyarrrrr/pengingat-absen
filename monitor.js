@@ -14,7 +14,7 @@ const LOGIN_POLL_MS = 2000;
 const CHECK_INTERVAL_MS = 60_000;
 const LOGIN_URL = 'https://simkuliah.usk.ac.id/index.php/login';
 const OCR_MODEL_PATH = path.join(RUNTIME, 'ocr-model.json');
-const AUTO_LOGIN_ATTEMPTS = 4;
+const AUTO_LOGIN_ATTEMPTS = 6;
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const iso = () => new Date().toISOString();
@@ -718,6 +718,8 @@ async function main() {
 module.exports = { classifyDocument, classifyClasses, nextIdleTarget, solveCaptcha, loadOcrModel, autoLogin, classifyPage, envCredential, launchOptions, telegramConfig, isNonInteractive, resolveEnd };
 if (require.main === module) main().catch(error => {
   ensureDirectories(); appendObservation('system', 'fatal', { error: error.message });
-  sendTelegram(`simkuliah-fatal-${slugTime()}`, MESSAGES.fatal(error.message));
+  if (process.env.MONITOR_SUPPRESS_FATAL !== '1') {
+    sendTelegram(`simkuliah-fatal-${slugTime()}`, MESSAGES.fatal(error.message));
+  }
   console.error(error.message); process.exitCode = 1;
 });
