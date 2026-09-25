@@ -447,7 +447,11 @@ async function autoLogin(page, mode) {
       const captcha = await firstVisible(page, captchaSelectors);
       if (!account || !password || !captcha) return false;
       const solved = await solveCaptcha(page);
-      if (!solved.answer || solved.answer.length !== 5) { appendObservation(mode, 'captcha_unsolved', solved); return false; }
+      if (!solved.answer || solved.answer.length !== 5) {
+        appendObservation(mode, 'captcha_unsolved', { attempt, glyphs: solved.glyphs, reason: solved.reason });
+        if (attempt < AUTO_LOGIN_ATTEMPTS) await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 });
+        continue;
+      }
       await account.fill(credential.account);
       await password.fill(credential.password);
       await captcha.fill(solved.answer);

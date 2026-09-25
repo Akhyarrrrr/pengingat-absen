@@ -1,5 +1,5 @@
 const assert = require('assert');
-const { classifyDocument, classifyClasses, nextIdleTarget, envCredential, launchOptions, telegramConfig, isNonInteractive, resolveEnd } = require('./monitor');
+const { classifyDocument, classifyClasses, nextIdleTarget, envCredential, launchOptions, telegramConfig, isNonInteractive, resolveEnd, autoLogin } = require('./monitor');
 
 const auth = classifyDocument({ url: 'https://kampus.example/index.php/absensi', text: 'Nama Mahasiswa Belum masuk waktu absen.' });
 assert.deepStrictEqual(auth, { session: 'authenticated', attendance: 'outside_window' });
@@ -90,4 +90,23 @@ assert.equal(resolveEnd({ MONITOR_END: '2026-09-19T11:45:00+07:00' }, {}), Date.
 assert.equal(resolveEnd({}, { end: '2026-09-19T11:45:00+07:00' }), Date.parse('2026-09-19T11:45:00+07:00'));
 assert.equal(resolveEnd({}, {}), null);
 
-console.log('monitor self-check passed');
+// CAPTCHA yang gagal dibaca harus diganti pada tiap percobaan sebelum login dihentikan.
+const oldAccount = process.env.SIMKULIAH_ACCOUNT, oldPassword = process.env.SIMKULIAH_PASSWORD;
+process.env.SIMKULIAH_ACCOUNT = 'akun-uji';
+process.env.SIMKULIAH_PASSWORD = 'sandi-uji';
+let reloads = 0;
+const visible = { first() { return this; }, count: async () => 1, isVisible: async () => true };
+const page = {
+  url: () => 'https://simkuliah.usk.ac.id/index.php/login',
+  locator: () => visible,
+  evaluate: async () => ({ answer: '', glyphs: 4 }),
+  reload: async () => { reloads++; }
+};
+autoLogin(page, 'self-test').then(result => {
+  assert.equal(result, false);
+  assert.equal(reloads, 5);
+  console.log('monitor self-check passed');
+}).catch(error => { console.error(error); process.exitCode = 1; }).finally(() => {
+  if (oldAccount === undefined) delete process.env.SIMKULIAH_ACCOUNT; else process.env.SIMKULIAH_ACCOUNT = oldAccount;
+  if (oldPassword === undefined) delete process.env.SIMKULIAH_PASSWORD; else process.env.SIMKULIAH_PASSWORD = oldPassword;
+});
