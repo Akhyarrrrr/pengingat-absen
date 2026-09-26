@@ -85,6 +85,14 @@ const MESSAGES = {
     'Waktu absen sudah masuk, tetapi dosen belum membuka presensi.',
     'Kamu akan diberi tahu lagi begitu dosen sudah absen dan tombol absen aktif.'
   ].join('\n')),
+  scheduled: config => notification('🟡', 'SUDAH MASUK JADWAL ABSEN', [
+    courseLine(config),
+    classLine(config),
+    `🕒 ${wib()}`,
+    RULE,
+    'Waktu absen sudah masuk. Monitor sedang menunggu absensi dibuka.',
+    'Kamu akan diberi tahu lagi saat tombol absen sudah aktif.'
+  ].join('\n')),
   interrupted: kind => notification('⚠️', 'PEMANTAUAN TERGANGGU', [
     kind === 'HTTP_500' ? 'Server layanan absensi mengembalikan HTTP 500.' : 'Tidak dapat menghubungi layanan absensi (gangguan jaringan).',
     '',
@@ -685,10 +693,17 @@ async function monitorAll(page) {
       for (const info of classes) {
         const kind = info.attendance === 'open' ? 'open' : info.attendance === 'waiting_lecturer' ? 'waiting' : null;
         if (!kind) continue;
-        const key = `${wibDateTag()}-${info.code}-${kind}`;
+        const view = { ...base, course_code: info.code, course_name: info.name, class: info.classCode, window: info.window };
+        // Jika pemeriksaan pertama sudah melihat status open, tetap kirim tahap
+        // jadwal lebih dulu agar dua pengingat tidak hilang karena timing awal.
+        const tag = `${wibDateTag()}-${info.code}`;
+        if (kind === 'open' && !seen.has(`${tag}-waiting`)) {
+          seen.add(`${tag}-waiting`);
+          sendTelegram(`${tag}-waiting`, MESSAGES.scheduled(view));
+        }
+        const key = `${tag}-${kind}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        const view = { ...base, course_code: info.code, course_name: info.name, class: info.classCode, window: info.window };
         sendTelegram(key, kind === 'open' ? MESSAGES.open(view) : MESSAGES.waiting(view));
         notified.add(info.code);
       }
